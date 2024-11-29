@@ -1,52 +1,33 @@
-import dotenv from 'dotenv';
-import express, { Express } from 'express';
-import path from 'path';
+import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import weatherRoutes from './routes/weatherRoutes.js';
+
+// ES modules fix for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
 
-// Import the routes
-import routes from './routes/index.js';
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const app: Express = express();
-
-const PORT = process.env.PORT || 3001;
-
-// Serve static files
-app.use(express.static(path.join(__dirname, '../client/dist'))); 
-
-// Enable CORS
-app.use(cors()); 
-
-// Parse JSON and form data
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '../../public')));
 
-// Use API routes
-app.use('/api', routes);
+// Routes
+app.use('/api/weather', weatherRoutes);
 
-// Serve index.html for all other routes (only need this once)
-app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+// Serve index.html for all other routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
 
-// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Visit http://localhost:${PORT} to view the app`);
-});
-
-// Error handling for uncaught exceptions
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
-});
-
-// Error handling for unhandled promise rejections
-process.on('unhandledRejection', (error) => {
-    console.error('Unhandled Rejection:', error);
-    process.exit(1);
-});
-
-export default app; 
+}); 
